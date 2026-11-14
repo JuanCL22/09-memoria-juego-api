@@ -1,0 +1,24 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "puntajes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "dificultad", "order": "ASCENDING" },
+        { "fieldPath": "movimientos", "order": "ASCENDING" },
+        { "fieldPath": "segundos", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "puntajes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "dificultad", "order": "ASCENDING" },
+        { "fieldPath": "ciudad", "order": "ASCENDING" },
+        { "fieldPath": "movimientos", "order": "ASCENDING" },
+        { "fieldPath": "segundos", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

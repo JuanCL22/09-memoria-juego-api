@@ -1,0 +1,48 @@
+{
+  "name": "09-memoria-juego-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "API backend para 09 · Juego de memoria con puntajes (Next.js App Router + Firebase Admin + Zod + Vitest)",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run --coverage",
+    "test:hook": "node --test .claude/hooks/pre-tool-use.test.mjs",
+    "check": "npm run typecheck && npm run lint && npm run format:check && npm run test",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.2",
+    "next": "^15.2.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.26.0",
+    "@typescript-eslint/parser": "^8.26.0",
+    "@types/node": "^22.13.9",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "@vitest/coverage-v8": "^3.0.8",
+    "eslint": "^9.21.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.4.3",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.2",
+    "vitest": "^3.0.8"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,mjs,json,md}": [
+      "prettier --write"
+    ],
+    "*.{ts,tsx}": [
+      "eslint --max-warnings 0"
+    ]
+  }
+}

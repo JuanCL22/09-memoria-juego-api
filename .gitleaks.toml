@@ -1,0 +1,8 @@
+title = "Configuración Gitleaks — 09-memoria-juego-api"
+
+[allowlist]
+description = "Permitir archivo de ejemplo sin secretos reales"
+paths = [
+  '''^env\.example$''',
+  '''^ia/'''
+]
