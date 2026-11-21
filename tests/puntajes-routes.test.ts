@@ -309,5 +309,70 @@ describe("Autorización de rol admin en /api/admin/puntajes/[id]", () => {
       params: Promise.resolve({ id: UUID_PRUEBA })
     });
     expect(res200.status).toBe(200);
+
+    verifyIdTokenMock.mockResolvedValueOnce({
+      uid: "usuario-admin",
+      email: "admin@test.com",
+      rol: "admin"
+    });
+    const res404 = await adminDelete(reqAdmin, {
+      params: Promise.resolve({ id: UUID_PRUEBA })
+    });
+    expect(res404.status).toBe(404);
+  });
+});
+
+describe("Ramas adicionales de ranking global y actualización idempotente", () => {
+  beforeEach(() => {
+    verifyIdTokenMock.mockReset();
+    storeGlobal.clear();
+    storeUsuarios.clear();
+  });
+
+  it("ordena por segundos cuando empatan movimientos y actualiza documento existente en PUT", async () => {
+    storeGlobal.set("id-1", {
+      id: "id-1",
+      jugador: "P1",
+      dificultad: "facil",
+      movimientos: 6,
+      segundos: 20
+    });
+    storeGlobal.set("id-2", {
+      id: "id-2",
+      jugador: "P2",
+      dificultad: "facil",
+      movimientos: 6,
+      segundos: 12
+    });
+
+    verifyIdTokenMock.mockResolvedValue({ uid: "u-1", email: "a@b.c" });
+    const reqRank = new Request("https://api.local/api/ranking", {
+      method: "GET",
+      headers: { authorization: "Bearer tok-u1" }
+    });
+    const resRank = await rankingGet(reqRank);
+    expect(resRank.status).toBe(200);
+
+    const bodyPut = {
+      jugador: "JugadorA",
+      dificultad: "facil",
+      movimientos: 6,
+      segundos: 15
+    };
+    const crearPut = () =>
+      new Request(`https://api.local/api/puntajes/${UUID_PRUEBA}`, {
+        method: "PUT",
+        headers: {
+          "content-type": "application/json",
+          authorization: "Bearer tok-u1"
+        },
+        body: JSON.stringify(bodyPut)
+      });
+
+    await puntajePut(crearPut(), { params: Promise.resolve({ id: UUID_PRUEBA }) });
+    const resPut2 = await puntajePut(crearPut(), {
+      params: Promise.resolve({ id: UUID_PRUEBA })
+    });
+    expect(resPut2.status).toBe(200);
   });
 });

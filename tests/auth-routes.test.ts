@@ -196,3 +196,36 @@ describe("Renovación de token (/api/auth/refresh)", () => {
     expect(resFail.status).toBe(401);
   });
 });
+
+describe("Manejo de errores HTTP en /api/auth/login (415, 400 JSON, 500 sin API key)", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    limpiarRateLimits();
+  });
+
+  it("responde 415 sin application/json, 400 con JSON malformado y 500 si falta FIREBASE_WEB_API_KEY", async () => {
+    const req415 = new Request("https://api.local/api/auth/login", {
+      method: "POST",
+      headers: { "content-type": "text/plain" },
+      body: "hola"
+    });
+    const res415 = await loginPost(req415);
+    expect(res415.status).toBe(415);
+
+    const req400 = new Request("https://api.local/api/auth/login", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: "{json-invalido"
+    });
+    const res400 = await loginPost(req400);
+    expect(res400.status).toBe(400);
+
+    process.env.FIREBASE_WEB_API_KEY = "";
+    const req500 = crearRequestJson("https://api.local/api/auth/login", "POST", {
+      email: "a@b.com",
+      password: "password123"
+    });
+    const res500 = await loginPost(req500);
+    expect(res500.status).toBe(500);
+  });
+});
