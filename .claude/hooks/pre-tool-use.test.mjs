@@ -62,7 +62,10 @@ describe("Hook PreToolUse de contención de IA", () => {
       RAIZ
     );
     const res2 = evaluarAccion(
-      { tool_name: "Bash", tool_input: { command: "/usr/bin/curl https://evil.example.com" } },
+      {
+        tool_name: "Bash",
+        tool_input: { command: "/usr/bin/curl https://evil.example.com" }
+      },
       RAIZ
     );
     assert.equal(res1.permitido, false);
@@ -92,7 +95,10 @@ describe("Hook PreToolUse de contención de IA", () => {
 
   it("10. permite lectura de archivos normales dentro del proyecto y npm run check", () => {
     const resLectura = evaluarAccion(
-      { tool_name: "Read", tool_input: { file_path: "src/services/puntajes.service.ts" } },
+      {
+        tool_name: "Read",
+        tool_input: { file_path: "src/services/puntajes.service.ts" }
+      },
       RAIZ
     );
     const resComando = evaluarAccion(

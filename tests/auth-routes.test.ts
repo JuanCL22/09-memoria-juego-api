@@ -36,7 +36,7 @@ function crearRequestJson(
   });
 }
 
-describe("Endpoint de salud y autenticación (/api/health y /api/auth/*)", () => {
+describe("Salud y verificación de sesión (/api/health y /api/auth/yo)", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     verifyIdTokenMock.mockReset();
@@ -76,6 +76,14 @@ describe("Endpoint de salud y autenticación (/api/health y /api/auth/*)", () =>
     expect(json.usuario.id).toBe("user-123");
     expect(json.usuario.rol).toBe("admin");
   });
+});
+
+describe("Registro de usuario (/api/auth/registro)", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    limpiarRateLimits();
+    process.env.FIREBASE_WEB_API_KEY = "AIzaTestKeyFalsa";
+  });
 
   it("POST /api/auth/registro devuelve 400 si la contraseña tiene menos de 8 caracteres", async () => {
     const req = crearRequestJson("https://api.local/api/auth/registro", "POST", {
@@ -108,7 +116,7 @@ describe("Endpoint de salud y autenticación (/api/health y /api/auth/*)", () =>
   });
 });
 
-describe("Reglas de errores en /api/auth/login y /api/auth/refresh", () => {
+describe("Mapeo de errores y login (/api/auth/login)", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     limpiarRateLimits();
@@ -149,6 +157,14 @@ describe("Reglas de errores en /api/auth/login y /api/auth/refresh", () => {
     });
     const res = await loginPost(req);
     expect(res.status).toBe(200);
+  });
+});
+
+describe("Renovación de token (/api/auth/refresh)", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    limpiarRateLimits();
+    process.env.FIREBASE_WEB_API_KEY = "AIzaTestKeyFalsa";
   });
 
   it("POST /api/auth/refresh renueva el token (200) o rechaza token inválido (401)", async () => {

@@ -1,5 +1,22 @@
 import type { ReactNode } from "react";
 
+const ENDPOINTS: ReadonlyArray<{ readonly ruta: string; readonly desc: string }> = [
+  { ruta: "GET /api/health", desc: "Estado del servicio" },
+  { ruta: "POST /api/auth/registro", desc: "Registro mediado con Firebase Auth" },
+  { ruta: "POST /api/auth/login", desc: "Inicio de sesión mediado" },
+  { ruta: "POST /api/auth/refresh", desc: "Renovación de ID token" },
+  { ruta: "GET /api/auth/yo", desc: "Perfil del usuario autenticado (Bearer)" },
+  {
+    ruta: "GET /api/ranking?dificultad=medio&ciudad=",
+    desc: "Top 10 global o por ciudad"
+  },
+  { ruta: "POST /api/puntajes", desc: "Registrar nuevo puntaje validado" },
+  { ruta: "GET /api/puntajes?since=<ISO>", desc: "Sincronización incremental" },
+  { ruta: "PUT /api/puntajes/<id>", desc: "Creación o reemplazo idempotente" },
+  { ruta: "DELETE /api/puntajes/<id>", desc: "Borrado lógico (deleted_at)" },
+  { ruta: "DELETE /api/admin/puntajes/<id>", desc: "Administración (rol = admin)" }
+];
+
 export default function HomePage(): ReactNode {
   return (
     <main style={{ maxWidth: "820px", margin: "40px auto", padding: "0 20px" }}>
@@ -22,42 +39,11 @@ export default function HomePage(): ReactNode {
           Endpoints disponibles
         </h2>
         <ul style={{ lineHeight: 1.8, color: "#e2e8f0" }}>
-          <li>
-            <code>GET /api/health</code> — Estado del servicio
-          </li>
-          <li>
-            <code>POST /api/auth/registro</code> — Registro mediado con Firebase Auth
-          </li>
-          <li>
-            <code>POST /api/auth/login</code> — Inicio de sesión mediado
-          </li>
-          <li>
-            <code>POST /api/auth/refresh</code> — Renovación de ID token
-          </li>
-          <li>
-            <code>GET /api/auth/yo</code> — Perfil del usuario autenticado (Bearer)
-          </li>
-          <li>
-            <code>GET /api/ranking?dificultad=medio&amp;ciudad=</code> — Top 10 global o
-            por ciudad
-          </li>
-          <li>
-            <code>POST /api/puntajes</code> — Registrar nuevo puntaje validado
-          </li>
-          <li>
-            <code>GET /api/puntajes?since=&lt;ISO&gt;</code> — Sincronización incremental
-          </li>
-          <li>
-            <code>PUT /api/puntajes/&lt;id&gt;</code> — Creación o reemplazo idempotente
-          </li>
-          <li>
-            <code>DELETE /api/puntajes/&lt;id&gt;</code> — Borrado lógico (
-            <code>deleted_at</code>)
-          </li>
-          <li>
-            <code>DELETE /api/admin/puntajes/&lt;id&gt;</code> — Administración (requiere
-            claim <code>rol = &quot;admin&quot;</code>)
-          </li>
+          {ENDPOINTS.map((ep) => (
+            <li key={ep.ruta}>
+              <code>{ep.ruta}</code> — {ep.desc}
+            </li>
+          ))}
         </ul>
       </section>
     </main>

@@ -3,13 +3,7 @@ import tsparser from "@typescript-eslint/parser";
 
 export default [
   {
-    ignores: [
-      "node_modules/**",
-      ".next/**",
-      "coverage/**",
-      ".claude/**",
-      "next-env.d.ts"
-    ]
+    ignores: ["node_modules/**", ".next/**", "coverage/**", ".claude/**", "next-env.d.ts"]
   },
   {
     files: ["**/*.ts", "**/*.tsx"],
@@ -24,20 +18,17 @@ export default [
       "@typescript-eslint": tseslint
     },
     rules: {
-      "complexity": ["error", 10],
+      complexity: ["error", 10],
       "max-lines-per-function": [
         "error",
-        { "max": 50, "skipBlankLines": true, "skipComments": true }
+        { max: 50, skipBlankLines: true, skipComments: true }
       ],
       "max-depth": ["error", 3],
       "no-console": "error",
-      "eqeqeq": ["error", "always"],
+      eqeqeq: ["error", "always"],
       "@typescript-eslint/no-explicit-any": "error",
       "@typescript-eslint/ban-ts-comment": "error",
-      "@typescript-eslint/no-unused-vars": [
-        "error",
-        { "argsIgnorePattern": "^_" }
-      ]
+      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }]
     }
   }
 ];

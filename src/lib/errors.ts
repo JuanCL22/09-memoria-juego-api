@@ -29,9 +29,7 @@ export function respuestaError(
   detalles?: DetalleError[]
 ): NextResponse<CuerpoError> {
   const cuerpo: CuerpoError =
-    detalles && detalles.length > 0
-      ? { error: mensaje, detalles }
-      : { error: mensaje };
+    detalles && detalles.length > 0 ? { error: mensaje, detalles } : { error: mensaje };
   return NextResponse.json(cuerpo, { status });
 }
 

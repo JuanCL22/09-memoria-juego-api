@@ -2,7 +2,11 @@ import { randomUUID } from "node:crypto";
 import { ApiError } from "@/src/lib/errors";
 import { getAdminDb } from "@/src/lib/firebase-admin";
 import { verificarRateLimit } from "@/src/lib/rate-limit";
-import type { Dificultad, PuntajeInput, RankingQuery } from "@/src/schemas/puntaje.schema";
+import type {
+  Dificultad,
+  PuntajeInput,
+  RankingQuery
+} from "@/src/schemas/puntaje.schema";
 
 export interface DocumentoPuntajePrivado {
   id: string;
@@ -94,12 +98,7 @@ export async function crearPuntaje(
 
   const db = getAdminDb();
   await db.collection("puntajes").doc(id).set(docGlobal);
-  await db
-    .collection("usuarios")
-    .doc(uid)
-    .collection("puntajes")
-    .doc(id)
-    .set(docPrivado);
+  await db.collection("usuarios").doc(uid).collection("puntajes").doc(id).set(docPrivado);
 
   return docPrivado;
 }
@@ -108,9 +107,7 @@ export async function obtenerRanking(
   filtro: RankingQuery
 ): Promise<DocumentoPuntajeGlobal[]> {
   const db = getAdminDb();
-  let queryRef = db
-    .collection("puntajes")
-    .where("dificultad", "==", filtro.dificultad);
+  let queryRef = db.collection("puntajes").where("dificultad", "==", filtro.dificultad);
 
   if (filtro.ciudad !== null) {
     queryRef = queryRef.where("ciudad", "==", filtro.ciudad);
@@ -122,9 +119,7 @@ export async function obtenerRanking(
     .limit(10)
     .get();
 
-  const items = snapshot.docs.map(
-    (doc) => doc.data() as DocumentoPuntajeGlobal
-  );
+  const items = snapshot.docs.map((doc) => doc.data() as DocumentoPuntajeGlobal);
   return ordenarPorMovimientosYTiempo(items).slice(0, 10);
 }
 
@@ -145,9 +140,7 @@ export async function listarPuntajesSincronizacion(
   }
 
   const snapshot = await queryRef.limit(500).get();
-  const items = snapshot.docs.map(
-    (doc) => doc.data() as DocumentoPuntajePrivado
-  );
+  const items = snapshot.docs.map((doc) => doc.data() as DocumentoPuntajePrivado);
 
   return {
     items,
@@ -162,11 +155,7 @@ export async function guardarPuntajeSincronizado(
 ): Promise<DocumentoPuntajePrivado> {
   const db = getAdminDb();
   const ahoraIso = new Date().toISOString();
-  const docRef = db
-    .collection("usuarios")
-    .doc(uid)
-    .collection("puntajes")
-    .doc(id);
+  const docRef = db.collection("usuarios").doc(uid).collection("puntajes").doc(id);
 
   const existente = await docRef.get();
   const datosPrevios = existente.exists
@@ -190,11 +179,7 @@ export async function eliminarPuntajeSincronizado(
   id: string
 ): Promise<{ ok: true }> {
   const db = getAdminDb();
-  const docRef = db
-    .collection("usuarios")
-    .doc(uid)
-    .collection("puntajes")
-    .doc(id);
+  const docRef = db.collection("usuarios").doc(uid).collection("puntajes").doc(id);
 
   const existente = await docRef.get();
   if (!existente.exists) {

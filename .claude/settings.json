@@ -47,10 +47,7 @@
       "allowWrite": ["."]
     },
     "network": {
-      "allowedDomains": [
-        "registry.npmjs.org",
-        "github.com"
-      ]
+      "allowedDomains": ["registry.npmjs.org", "github.com"]
     }
   },
   "hooks": {

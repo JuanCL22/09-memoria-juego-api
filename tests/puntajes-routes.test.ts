@@ -14,89 +14,65 @@ function obtenerMapaUsuario(uid: string): Map<string, Record<string, unknown>> {
   return mapa;
 }
 
+function listarDocsStore(mapa: Map<string, Record<string, unknown>>) {
+  return async () => ({
+    docs: Array.from(mapa.values()).map((d) => ({ data: () => d }))
+  });
+}
+
+function crearMockColeccionGlobal() {
+  const getGlobal = listarDocsStore(storeGlobal);
+  const ordenGlobal = () => ({ orderBy: () => ({ limit: () => ({ get: getGlobal }) }) });
+  return {
+    doc: (id: string) => ({
+      set: async (data: Record<string, unknown>) => {
+        storeGlobal.set(id, data);
+      },
+      get: async () => ({
+        exists: storeGlobal.has(id),
+        data: () => storeGlobal.get(id)
+      }),
+      delete: async () => {
+        storeGlobal.delete(id);
+      }
+    }),
+    where: () => ({
+      where: () => ({ orderBy: ordenGlobal }),
+      orderBy: ordenGlobal
+    })
+  };
+}
+
+function crearMockColeccionUsuario(uid: string) {
+  const mapa = obtenerMapaUsuario(uid);
+  const getUsuario = listarDocsStore(mapa);
+  return {
+    doc: (id: string) => ({
+      get: async () => ({
+        exists: mapa.has(id),
+        data: () => mapa.get(id)
+      }),
+      set: async (data: Record<string, unknown>, opts?: { merge?: boolean }) => {
+        const previo = mapa.get(id) ?? {};
+        mapa.set(id, opts?.merge ? { ...previo, ...data } : data);
+      }
+    }),
+    orderBy: () => ({
+      where: () => ({ limit: () => ({ get: getUsuario }) }),
+      limit: () => ({ get: getUsuario })
+    })
+  };
+}
+
 function crearMockDb() {
   return {
     collection: (nombre: string) => {
       if (nombre === "puntajes") {
-        return {
-          doc: (id: string) => ({
-            set: async (data: Record<string, unknown>) => {
-              storeGlobal.set(id, data);
-            },
-            get: async () => ({
-              exists: storeGlobal.has(id),
-              data: () => storeGlobal.get(id)
-            }),
-            delete: async () => {
-              storeGlobal.delete(id);
-            }
-          }),
-          where: () => ({
-            where: () => ({
-              orderBy: () => ({
-                orderBy: () => ({
-                  limit: () => ({
-                    get: async () => ({
-                      docs: Array.from(storeGlobal.values()).map((d) => ({
-                        data: () => d
-                      }))
-                    })
-                  })
-                })
-              })
-            }),
-            orderBy: () => ({
-              orderBy: () => ({
-                limit: () => ({
-                  get: async () => ({
-                    docs: Array.from(storeGlobal.values()).map((d) => ({
-                      data: () => d
-                    }))
-                  })
-                })
-              })
-            })
-          })
-        };
+        return crearMockColeccionGlobal();
       }
       return {
         doc: (uid: string) => ({
-          collection: () => {
-            const mapa = obtenerMapaUsuario(uid);
-            return {
-              doc: (id: string) => ({
-                get: async () => ({
-                  exists: mapa.has(id),
-                  data: () => mapa.get(id)
-                }),
-                set: async (
-                  data: Record<string, unknown>,
-                  opts?: { merge?: boolean }
-                ) => {
-                  const previo = mapa.get(id) ?? {};
-                  mapa.set(id, opts?.merge ? { ...previo, ...data } : data);
-                }
-              }),
-              orderBy: () => ({
-                where: () => ({
-                  limit: () => ({
-                    get: async () => ({
-                      docs: Array.from(mapa.values()).map((d) => ({
-                        data: () => d
-                      }))
-                    })
-                  })
-                }),
-                limit: () => ({
-                  get: async () => ({
-                    docs: Array.from(mapa.values()).map((d) => ({
-                      data: () => d
-                    }))
-                  })
-                })
-              })
-            };
-          }
+          collection: () => crearMockColeccionUsuario(uid)
         })
       };
     }
@@ -120,7 +96,7 @@ import { GET as rankingGet } from "@/app/api/ranking/route";
 
 const UUID_PRUEBA = "550e8400-e29b-41d4-a716-446655440000";
 
-describe("Pruebas de rutas de puntajes: 401, 400 plausibilidad y 201 creación", () => {
+describe("Pruebas de autenticación y validación en /api/puntajes", () => {
   beforeEach(() => {
     verifyIdTokenMock.mockReset();
     storeGlobal.clear();
@@ -162,6 +138,15 @@ describe("Pruebas de rutas de puntajes: 401, 400 plausibilidad y 201 creación",
     });
     const res = await puntajesPost(reqInvalido);
     expect(res.status).toBe(400);
+  });
+});
+
+describe("Creación de puntajes, ranking y rate limit", () => {
+  beforeEach(() => {
+    verifyIdTokenMock.mockReset();
+    storeGlobal.clear();
+    storeUsuarios.clear();
+    limpiarRateLimits();
   });
 
   it("crea puntaje válido (201), ordena ranking (200) y aplica rate limit (429)", async () => {
@@ -208,7 +193,7 @@ describe("Pruebas de rutas de puntajes: 401, 400 plausibilidad y 201 creación",
   });
 });
 
-describe("3. Autorización, aislamiento entre usuarios y sincronización", () => {
+describe("3. Autorización y aislamiento entre usuarios en PUT/DELETE", () => {
   beforeEach(() => {
     verifyIdTokenMock.mockReset();
     storeGlobal.clear();
@@ -216,44 +201,56 @@ describe("3. Autorización, aislamiento entre usuarios y sincronización", () =>
     limpiarRateLimits();
   });
 
-  it("aísla los datos privados entre usuarios en PUT/GET/DELETE /api/puntajes/[id]", async () => {
+  it("aísla los datos privados entre usuarios en PUT y DELETE /api/puntajes/[id]", async () => {
     verifyIdTokenMock.mockResolvedValueOnce({ uid: "usuario-A", email: "a@test.com" });
-    const reqPutA = new Request(
-      `https://api.local/api/puntajes/${UUID_PRUEBA}`,
-      {
-        method: "PUT",
-        headers: {
-          "content-type": "application/json",
-          authorization: "Bearer tok-A"
-        },
-        body: JSON.stringify({
-          jugador: "JugadorA",
-          dificultad: "facil",
-          movimientos: 6,
-          segundos: 15
-        })
-      }
-    );
+    const reqPutA = new Request(`https://api.local/api/puntajes/${UUID_PRUEBA}`, {
+      method: "PUT",
+      headers: {
+        "content-type": "application/json",
+        authorization: "Bearer tok-A"
+      },
+      body: JSON.stringify({
+        jugador: "JugadorA",
+        dificultad: "facil",
+        movimientos: 6,
+        segundos: 15
+      })
+    });
     const resPutA = await puntajePut(reqPutA, {
       params: Promise.resolve({ id: UUID_PRUEBA })
     });
     expect(resPutA.status).toBe(200);
 
-    // Usuario B intenta borrar el documento de Usuario A -> recibe 404 por aislamiento de ruta
     verifyIdTokenMock.mockResolvedValueOnce({ uid: "usuario-B", email: "b@test.com" });
-    const reqDelB = new Request(
-      `https://api.local/api/puntajes/${UUID_PRUEBA}`,
-      {
-        method: "DELETE",
-        headers: { authorization: "Bearer tok-B" }
-      }
-    );
+    const reqDelB = new Request(`https://api.local/api/puntajes/${UUID_PRUEBA}`, {
+      method: "DELETE",
+      headers: { authorization: "Bearer tok-B" }
+    });
     const resDelB = await puntajeDelete(reqDelB, {
       params: Promise.resolve({ id: UUID_PRUEBA })
     });
     expect(resDelB.status).toBe(404);
+  });
+});
 
-    // Usuario A sincroniza y luego realiza borrado lógico (200)
+describe("Sincronización incremental y borrado lógico del propietario", () => {
+  beforeEach(() => {
+    verifyIdTokenMock.mockReset();
+    storeUsuarios.clear();
+  });
+
+  it("permite al propietario sincronizar (GET ?since=) y borrar lógicamente (DELETE)", async () => {
+    obtenerMapaUsuario("usuario-A").set(UUID_PRUEBA, {
+      id: UUID_PRUEBA,
+      jugador: "JugadorA",
+      dificultad: "facil",
+      movimientos: 6,
+      segundos: 15,
+      created_at: "2026-05-01T00:00:00.000Z",
+      updated_at: "2026-05-01T00:00:00.000Z",
+      deleted_at: null
+    });
+
     verifyIdTokenMock.mockResolvedValueOnce({ uid: "usuario-A", email: "a@test.com" });
     const reqSyncA = new Request(
       "https://api.local/api/puntajes?since=2026-01-01T00:00:00.000Z",
@@ -266,17 +263,21 @@ describe("3. Autorización, aislamiento entre usuarios y sincronización", () =>
     expect(resSyncA.status).toBe(200);
 
     verifyIdTokenMock.mockResolvedValueOnce({ uid: "usuario-A", email: "a@test.com" });
-    const reqDelA = new Request(
-      `https://api.local/api/puntajes/${UUID_PRUEBA}`,
-      {
-        method: "DELETE",
-        headers: { authorization: "Bearer tok-A" }
-      }
-    );
+    const reqDelA = new Request(`https://api.local/api/puntajes/${UUID_PRUEBA}`, {
+      method: "DELETE",
+      headers: { authorization: "Bearer tok-A" }
+    });
     const resDelA = await puntajeDelete(reqDelA, {
       params: Promise.resolve({ id: UUID_PRUEBA })
     });
     expect(resDelA.status).toBe(200);
+  });
+});
+
+describe("Autorización de rol admin en /api/admin/puntajes/[id]", () => {
+  beforeEach(() => {
+    verifyIdTokenMock.mockReset();
+    storeGlobal.clear();
   });
 
   it("DELETE /api/admin/puntajes/[id] devuelve 403 sin claim rol='admin' y 200 con rol='admin'", async () => {
@@ -286,13 +287,10 @@ describe("3. Autorización, aislamiento entre usuarios y sincronización", () =>
       uid: "usuario-normal",
       email: "u@test.com"
     });
-    const reqSinRol = new Request(
-      `https://api.local/api/admin/puntajes/${UUID_PRUEBA}`,
-      {
-        method: "DELETE",
-        headers: { authorization: "Bearer tok-normal" }
-      }
-    );
+    const reqSinRol = new Request(`https://api.local/api/admin/puntajes/${UUID_PRUEBA}`, {
+      method: "DELETE",
+      headers: { authorization: "Bearer tok-normal" }
+    });
     const res403 = await adminDelete(reqSinRol, {
       params: Promise.resolve({ id: UUID_PRUEBA })
     });
@@ -303,13 +301,10 @@ describe("3. Autorización, aislamiento entre usuarios y sincronización", () =>
       email: "admin@test.com",
       rol: "admin"
     });
-    const reqAdmin = new Request(
-      `https://api.local/api/admin/puntajes/${UUID_PRUEBA}`,
-      {
-        method: "DELETE",
-        headers: { authorization: "Bearer tok-admin" }
-      }
-    );
+    const reqAdmin = new Request(`https://api.local/api/admin/puntajes/${UUID_PRUEBA}`, {
+      method: "DELETE",
+      headers: { authorization: "Bearer tok-admin" }
+    });
     const res200 = await adminDelete(reqAdmin, {
       params: Promise.resolve({ id: UUID_PRUEBA })
     });

@@ -5,11 +5,7 @@ export const metadata = {
   description: "API Backend (Next.js + Firebase Admin + Zod) para 09-memoria-juego"
 };
 
-export default function RootLayout({
-  children
-}: {
-  children: ReactNode;
-}): ReactNode {
+export default function RootLayout({ children }: { children: ReactNode }): ReactNode {
   return (
     <html lang="es">
       <body

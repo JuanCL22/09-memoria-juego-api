@@ -9,9 +9,7 @@ export const PAREJAS_POR_DIFICULTAD: Record<Dificultad, number> = {
   dificil: 12
 };
 
-export const uuidSchema = z
-  .string()
-  .uuid("El identificador debe ser un UUID válido");
+export const uuidSchema = z.string().uuid("El identificador debe ser un UUID válido");
 
 export const dificultadSchema = z.enum(dificultades, {
   errorMap: () => ({

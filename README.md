@@ -25,19 +25,19 @@ Backend REST construido con **Next.js (App Router, Route Handlers en runtime Nod
 
 ## 2. Endpoints Implementados
 
-| Método y Ruta | Autenticación | Descripción |
-|---|---|---|
-| `GET /api/health` | Pública | Verificación de estado del servicio (`200 { ok: true, servidor_ahora }`). |
-| `POST /api/auth/registro` | Pública | Registro mediado en Firebase Auth (`contraseña ≥ 8`). Devuelve `201`. |
-| `POST /api/auth/login` | Pública | Inicio de sesión mediado con límite de tasa (`429`) y mensaje uniforme en `401`. |
-| `POST /api/auth/refresh` | Pública | Renovación de ID token mediante `refreshToken`. |
-| `GET /api/auth/yo` | Bearer Token | Devuelve el perfil verificado (`{ id, email, rol }`). |
-| `GET /api/ranking?dificultad=medio&ciudad=` | Bearer Token | Top 10 ordenado por `movimientos ASC` y `segundos ASC`. |
-| `POST /api/puntajes` | Bearer Token | Valida plausibilidad (`≥ 1 s` y `≥ 1 movimiento` por pareja) y límite por minuto. |
-| `GET /api/puntajes?since=<ISO>` | Bearer Token | Sincronización incremental de `usuarios/{uid}/puntajes` (incluye borrados lógicos). |
-| `PUT /api/puntajes/<id>` | Bearer Token | Creación o reemplazo idempotente con `UUID` generado por el cliente. |
-| `DELETE /api/puntajes/<id>` | Bearer Token | Borrado lógico (`deleted_at`). Devuelve `404` si no pertenece al usuario. |
-| `DELETE /api/admin/puntajes/<id>` | Bearer + `rol="admin"` | Eliminación administrativa en el ranking global (`403` si no tiene el claim `admin`). |
+| Método y Ruta                               | Autenticación          | Descripción                                                                           |
+| ------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------- |
+| `GET /api/health`                           | Pública                | Verificación de estado del servicio (`200 { ok: true, servidor_ahora }`).             |
+| `POST /api/auth/registro`                   | Pública                | Registro mediado en Firebase Auth (`contraseña ≥ 8`). Devuelve `201`.                 |
+| `POST /api/auth/login`                      | Pública                | Inicio de sesión mediado con límite de tasa (`429`) y mensaje uniforme en `401`.      |
+| `POST /api/auth/refresh`                    | Pública                | Renovación de ID token mediante `refreshToken`.                                       |
+| `GET /api/auth/yo`                          | Bearer Token           | Devuelve el perfil verificado (`{ id, email, rol }`).                                 |
+| `GET /api/ranking?dificultad=medio&ciudad=` | Bearer Token           | Top 10 ordenado por `movimientos ASC` y `segundos ASC`.                               |
+| `POST /api/puntajes`                        | Bearer Token           | Valida plausibilidad (`≥ 1 s` y `≥ 1 movimiento` por pareja) y límite por minuto.     |
+| `GET /api/puntajes?since=<ISO>`             | Bearer Token           | Sincronización incremental de `usuarios/{uid}/puntajes` (incluye borrados lógicos).   |
+| `PUT /api/puntajes/<id>`                    | Bearer Token           | Creación o reemplazo idempotente con `UUID` generado por el cliente.                  |
+| `DELETE /api/puntajes/<id>`                 | Bearer Token           | Borrado lógico (`deleted_at`). Devuelve `404` si no pertenece al usuario.             |
+| `DELETE /api/admin/puntajes/<id>`           | Bearer + `rol="admin"` | Eliminación administrativa en el ranking global (`403` si no tiene el claim `admin`). |
 
 ---
 
@@ -61,16 +61,16 @@ npm run dev
 
 ## 4. Justificación de Dependencias (`package.json`)
 
-| Paquete | Tipo | Justificación |
-|---|---|---|
-| `next`, `react`, `react-dom` | Producción | Framework base exigido para Route Handlers (`app/api/**/route.ts`) en Vercel. |
-| `firebase-admin` | Producción | SDK oficial de servidor para verificar ID tokens (`verifyIdToken`) y operar Firestore con reglas cerradas. |
-| `zod` | Producción | Validación declarativa y estricta (`.strict()`) de todos los cuerpos y parámetros de consulta. |
-| `typescript`, `@types/*` | Desarrollo | Tipado estático con `strict: true` y `noUncheckedIndexedAccess: true`. |
+| Paquete                          | Tipo       | Justificación                                                                                                |
+| -------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------ |
+| `next`, `react`, `react-dom`     | Producción | Framework base exigido para Route Handlers (`app/api/**/route.ts`) en Vercel.                                |
+| `firebase-admin`                 | Producción | SDK oficial de servidor para verificar ID tokens (`verifyIdToken`) y operar Firestore con reglas cerradas.   |
+| `zod`                            | Producción | Validación declarativa y estricta (`.strict()`) de todos los cuerpos y parámetros de consulta.               |
+| `typescript`, `@types/*`         | Desarrollo | Tipado estático con `strict: true` y `noUncheckedIndexedAccess: true`.                                       |
 | `eslint`, `@typescript-eslint/*` | Desarrollo | Linter con límites de complejidad (`≤ 10`), líneas por función (`≤ 50`), profundidad (`≤ 3`) y `no-console`. |
-| `prettier` | Desarrollo | Formateo automático consistente verificado en `npm run check`. |
-| `vitest`, `@vitest/coverage-v8` | Desarrollo | Ejecución de pruebas unitarias y de integración con umbral obligatorio de cobertura `≥ 80 %`. |
-| `husky`, `lint-staged` | Desarrollo | Hooks de Git (`pre-commit` y `pre-push`) para impedir commits o pushes que incumplan las reglas de calidad. |
+| `prettier`                       | Desarrollo | Formateo automático consistente verificado en `npm run check`.                                               |
+| `vitest`, `@vitest/coverage-v8`  | Desarrollo | Ejecución de pruebas unitarias y de integración con umbral obligatorio de cobertura `≥ 80 %`.                |
+| `husky`, `lint-staged`           | Desarrollo | Hooks de Git (`pre-commit` y `pre-push`) para impedir commits o pushes que incumplan las reglas de calidad.  |
 
 ---
 

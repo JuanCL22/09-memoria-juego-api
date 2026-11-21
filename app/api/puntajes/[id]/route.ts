@@ -25,11 +25,7 @@ export async function PUT(
     const body = await leerJsonSeguro(request);
     const datos = puntajeInputSchema.parse(body);
 
-    const guardado = await guardarPuntajeSincronizado(
-      usuario.uid,
-      idValidado,
-      datos
-    );
+    const guardado = await guardarPuntajeSincronizado(usuario.uid, idValidado, datos);
     return NextResponse.json(guardado, { status: 200 });
   } catch (error) {
     return manejarExcepcion(error);
